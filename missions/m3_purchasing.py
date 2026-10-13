@@ -26,9 +26,11 @@ def run(verbose: bool = True) -> dict:
         od = num(c["on_demand_hr"])
         on_demand_cost = gpu_hours * od
 
-        tier = pricing.recommend_tier(hpd, interruptible)
+        days = int(num(j["days"]))
+        tier = pricing.recommend_tier(hpd, interruptible, gpu_type=gtype, job_days=days)
         if tier == "spot":
-            sim = pricing.spot_checkpoint_cost(gpu_hours, num(c["spot_hr"]), od)
+            risk = pricing.GPU_SPOT_INTERRUPT_RISK.get(gtype, 0.05)
+            sim = pricing.spot_checkpoint_cost(gpu_hours, num(c["spot_hr"]), od, interrupt_rate=risk)
             opt_cost = sim["spot_cost"]
         elif tier == "reserved":
             opt_cost = gpu_hours * num(c["reserved_3yr_hr"])
